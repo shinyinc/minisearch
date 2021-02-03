@@ -2,7 +2,6 @@
 .DS_Store
 /closet
 /tmp
-/dist
 /examples/dist
 /examples/node_modules
 /coverage
