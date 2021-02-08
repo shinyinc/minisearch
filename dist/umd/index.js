@@ -1311,13 +1311,15 @@
             _ref4$ = _ref4[1],
             score = _ref4$.score,
             match = _ref4$.match,
-            terms = _ref4$.terms;
+            terms = _ref4$.terms,
+            tfScores = _ref4$.tfScores;
         var result = {
           id: _this6._documentIds[docId],
           terms: uniq(terms),
           allTerms: terms,
           score: score,
-          match: match
+          match: match,
+          tfScores: tfScores
         };
         Object.assign(result, _this6._storedFields[docId]);
 
@@ -1798,7 +1800,7 @@
       } else {
         combined[documentId].score += score;
         combined[documentId].score *= 1.5;
-        combined[documentId].tfScores.push(score);
+        combined[documentId].tfScores = [].concat(combined[documentId].tfScores, [score]);
         combined[documentId].terms = [].concat(combined[documentId].terms, terms);
         Object.assign(combined[documentId].match, match);
       }
@@ -1823,6 +1825,7 @@
 
       combined[documentId] = combined[documentId] || {};
       combined[documentId].score = a[documentId].score + score;
+      combined[documentId].tfScores = [].concat(combined[documentId].tfScores, [score]);
       combined[documentId].match = _objectSpread2(_objectSpread2({}, a[documentId].match), match);
       combined[documentId].terms = [].concat(a[documentId].terms, terms);
       return combined;

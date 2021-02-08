@@ -406,13 +406,14 @@ class MiniSearch {
     const combinedResults = this.combineResults(results, options.combineWith)
 
     return Object.entries(combinedResults)
-      .reduce((results, [docId, { score, match, terms }]) => {
+      .reduce((results, [docId, { score, match, terms, tfScores }]) => {
         const result = {
           id: this._documentIds[docId],
           terms: uniq(terms),
           allTerms: terms,
           score,
-          match
+          match,
+	  tfScores
         }
         Object.assign(result, this._storedFields[docId])
         if (options.filter == null || options.filter(result)) {
@@ -751,7 +752,7 @@ const combinators = {
       } else {
         combined[documentId].score += score
         combined[documentId].score *= 1.5
-        combined[documentId].tfScores.push(score)
+        combined[documentId].tfScores = [...combined[documentId].tfScores, score]
         combined[documentId].terms = [...combined[documentId].terms, ...terms]
         Object.assign(combined[documentId].match, match)
       }
@@ -764,6 +765,7 @@ const combinators = {
       if (a[documentId] === undefined) { return combined }
       combined[documentId] = combined[documentId] || {}
       combined[documentId].score = a[documentId].score + score
+      combined[documentId].tfScores = [...combined[documentId].tfScores, score]
       combined[documentId].match = { ...a[documentId].match, ...match }
       combined[documentId].terms = [...a[documentId].terms, ...terms]
       return combined

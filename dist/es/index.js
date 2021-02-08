@@ -10,7 +10,6 @@ function _defineProperty(obj, key, value) {
     obj[key] = value;
   }
 
-
   return obj;
 }
 
@@ -1137,14 +1136,16 @@ class MiniSearch {
     return Object.entries(combinedResults).reduce((results, [docId, {
       score,
       match,
-      terms
+      terms,
+      tfScores
     }]) => {
       const result = {
         id: this._documentIds[docId],
         terms: uniq(terms),
         allTerms: terms,
         score,
-        match
+        match,
+        tfScores
       };
       Object.assign(result, this._storedFields[docId]);
 
@@ -1584,7 +1585,7 @@ const combinators = {
       } else {
         combined[documentId].score += score;
         combined[documentId].score *= 1.5;
-        combined[documentId].tfScores.push(score);
+        combined[documentId].tfScores = [...combined[documentId].tfScores, score];
         combined[documentId].terms = [...combined[documentId].terms, ...terms];
         Object.assign(combined[documentId].match, match);
       }
@@ -1608,6 +1609,7 @@ const combinators = {
 
       combined[documentId] = combined[documentId] || {};
       combined[documentId].score = a[documentId].score + score;
+      combined[documentId].tfScores = [...combined[documentId].tfScores, score];
       combined[documentId].match = _objectSpread2(_objectSpread2({}, a[documentId].match), match);
       combined[documentId].terms = [...a[documentId].terms, ...terms];
       return combined;
