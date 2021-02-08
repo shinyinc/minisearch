@@ -1523,11 +1523,14 @@ const termResults = function (self, term, boosts, boostDocument, indexData, weig
       results[documentId] = results[documentId] || {
         score: 0,
         match: {},
-        terms: []
+        terms: [],
+        tfScores: []
       };
       results[documentId].terms.push(term);
       results[documentId].match[term] = getOwnProperty(results[documentId].match, term) || [];
-      results[documentId].score += docBoost * score(tf, df, self._documentCount, normalizedLength, boost, editDistance);
+      const scorePart = docBoost * score(tf, df, self._documentCount, normalizedLength, boost, editDistance);
+      results[documentId].score += scorePart;
+      results[documentId].tfScores.push(scorePart);
       results[documentId].match[term].push(field);
     });
     return results;
@@ -1573,19 +1576,20 @@ const combinators = {
     return Object.entries(b).reduce((combined, [documentId, {
       score,
       match,
-      terms
+      terms,
+      tfScores
     }]) => {
       if (combined[documentId] == null) {
         combined[documentId] = {
           score,
           match,
           terms,
-          tfScores: []
+          tfScores
         };
       } else {
         combined[documentId].score += score;
         combined[documentId].score *= 1.5;
-        combined[documentId].tfScores = [...combined[documentId].tfScores, score];
+        combined[documentId].tfScores = [...combined[documentId].tfScores, ...tfScores];
         combined[documentId].terms = [...combined[documentId].terms, ...terms];
         Object.assign(combined[documentId].match, match);
       }
@@ -1601,7 +1605,8 @@ const combinators = {
     return Object.entries(b).reduce((combined, [documentId, {
       score,
       match,
-      terms
+      terms,
+      tfScores
     }]) => {
       if (a[documentId] === undefined) {
         return combined;
@@ -1609,7 +1614,7 @@ const combinators = {
 
       combined[documentId] = combined[documentId] || {};
       combined[documentId].score = a[documentId].score + score;
-      combined[documentId].tfScores = [...combined[documentId].tfScores, score];
+      combined[documentId].tfScores = [...a[documentId].tfScores, ...tfScores];
       combined[documentId].match = _objectSpread2(_objectSpread2({}, a[documentId].match), match);
       combined[documentId].terms = [...a[documentId].terms, ...terms];
       return combined;

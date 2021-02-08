@@ -1738,11 +1738,14 @@
         results[documentId] = results[documentId] || {
           score: 0,
           match: {},
-          terms: []
+          terms: [],
+          tfScores: []
         };
         results[documentId].terms.push(term);
         results[documentId].match[term] = getOwnProperty(results[documentId].match, term) || [];
-        results[documentId].score += docBoost * score(tf, df, self._documentCount, normalizedLength, boost, editDistance);
+        var scorePart = docBoost * score(tf, df, self._documentCount, normalizedLength, boost, editDistance);
+        results[documentId].score += scorePart;
+        results[documentId].tfScores.push(scorePart);
         results[documentId].match[term].push(field);
       });
       return results;
@@ -1788,19 +1791,20 @@
           _ref16$ = _ref16[1],
           score = _ref16$.score,
           match = _ref16$.match,
-          terms = _ref16$.terms;
+          terms = _ref16$.terms,
+          tfScores = _ref16$.tfScores;
 
       if (combined[documentId] == null) {
         combined[documentId] = {
           score: score,
           match: match,
           terms: terms,
-          tfScores: []
+          tfScores: tfScores
         };
       } else {
         combined[documentId].score += score;
         combined[documentId].score *= 1.5;
-        combined[documentId].tfScores = [].concat(combined[documentId].tfScores, [score]);
+        combined[documentId].tfScores = [].concat(combined[documentId].tfScores, tfScores);
         combined[documentId].terms = [].concat(combined[documentId].terms, terms);
         Object.assign(combined[documentId].match, match);
       }
@@ -1817,7 +1821,8 @@
           _ref17$ = _ref17[1],
           score = _ref17$.score,
           match = _ref17$.match,
-          terms = _ref17$.terms;
+          terms = _ref17$.terms,
+          tfScores = _ref17$.tfScores;
 
       if (a[documentId] === undefined) {
         return combined;
@@ -1825,7 +1830,7 @@
 
       combined[documentId] = combined[documentId] || {};
       combined[documentId].score = a[documentId].score + score;
-      combined[documentId].tfScores = [].concat(combined[documentId].tfScores, [score]);
+      combined[documentId].tfScores = [].concat(a[documentId].tfScores, tfScores);
       combined[documentId].match = _objectSpread2(_objectSpread2({}, a[documentId].match), match);
       combined[documentId].terms = [].concat(a[documentId].terms, terms);
       return combined;
